@@ -11,6 +11,10 @@
     nginx_container_name: nginx_container
 
   tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
     - name: Install Docker
       apt:
         name: docker.io
