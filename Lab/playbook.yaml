@@ -13,9 +13,7 @@
         state: present
 
     - name: Pull Nginx Docker image
-      docker_image:
-        name: nginx:latest
-        state: present
+      command: docker pull nginx:latest
 
     - name: Run Nginx Docker container
       docker_container:
