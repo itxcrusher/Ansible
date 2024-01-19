@@ -21,8 +21,8 @@
         state: present
 
     - name: Create Docker network if it doesn't exist
-      command: docker network create wordpress_network
-      # when: network_inspect_result.rc != 0
+      docker_network:
+        name: wordpress_network
 
     - name: Update apt package cache
       apt:
