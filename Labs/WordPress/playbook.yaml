@@ -20,11 +20,6 @@
         name: docker.io
         state: present
 
-    - name: Check if Docker network exists
-      command: docker network inspect wordpress_network
-      ignore_errors: yes
-      register: network_inspect_result
-
     - name: Create Docker network if it doesn't exist
       command: docker network create wordpress_network
       when: network_inspect_result.rc != 0
@@ -55,7 +50,7 @@
           MYSQL_DATABASE: "{{ mysql_db }}"
           MYSQL_USER: "{{ mysql_user }}"
           MYSQL_PASSWORD: "{{ mysql_password }}"
-        network_mode: bridge
+        network_mode: wordpress_network
 
     - name: Pull WordPress Docker image
       command: docker pull wordpress:latest
@@ -69,7 +64,7 @@
           WORDPRESS_DB_NAME: "{{ mysql_db }}"
           WORDPRESS_DB_USER: "{{ mysql_user }}"
           WORDPRESS_DB_PASSWORD: "{{ mysql_password }}"
-        network_mode: bridge
+        network_mode: wordpress_network
 
     - name: Pull Nginx Docker image
       command: docker pull nginx:latest
@@ -84,7 +79,7 @@
         ports:
           - "80:80"
           - "443:443"
-        network_mode: bridge
+        network_mode: wordpress_network
 
     - name: Check images
       command: sudo docker images
