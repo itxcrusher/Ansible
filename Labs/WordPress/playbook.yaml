@@ -34,8 +34,8 @@
         name: docker-compose
         state: present
 
-    - name: Create Docker network
-      command: docker network create wordpress_network
+    #- name: Create Docker network
+     # command: docker network create wordpress_network
 
     - name: Pull MySQL Docker image
       command: docker pull mysql:latest
