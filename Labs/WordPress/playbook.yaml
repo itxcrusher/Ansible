@@ -49,7 +49,7 @@
       docker_container:
         name: "{{ wordpress_container_name }}"
         image: wordpress:latest
-        environment:
+        env:
           WORDPRESS_DB_HOST: mysql_container
           WORDPRESS_DB_NAME: "{{ mysql_db }}"
           WORDPRESS_DB_USER: "{{ mysql_user }}"
