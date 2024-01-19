@@ -11,14 +11,9 @@
     nginx_container_name: nginx_container
 
   tasks:
-    - name: Check if Docker network exists
-      command: docker network inspect wordpress_network
-      ignore_errors: yes
-      register: network_inspect_result
-
-    - name: Create Docker network if it doesn't exist
+    - name: Create Docker network
       command: docker network create wordpress_network
-      when: network_inspect_result.rc != 0
+      ignore_errors: yes
 
     - name: Update apt package cache
       apt:
