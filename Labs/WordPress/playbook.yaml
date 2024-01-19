@@ -78,6 +78,13 @@
         ports:
           - "80:80"
           - "443:443"
-        #depends_on:
-         # - "{{ wordpress_container_name }}"
         network_mode: bridge
+
+      - name: Check if the application is running
+        uri:
+          url: "http://3.80.225.89"
+        register: result
+
+      - name: Print the HTTP status code
+        debug:
+          var: result.status
