@@ -9,21 +9,9 @@
     mysql_password: your_wordpress_db_password
     wordpress_container_name: wordpress_container
     nginx_container_name: nginx_container
+    cron_script_path: "cronjob.sh"
 
   tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
-
-    - name: Create Docker network if it doesn't exist
-      docker_network:
-        name: wordpress_network
-
     - name: Update apt package cache
       apt:
         update_cache: yes
@@ -37,6 +25,10 @@
       apt:
         name: docker-compose
         state: present
+
+    - name: Create Docker network
+      docker_network:
+        name: wordpress_network
 
     - name: Pull MySQL Docker image
       command: docker pull mysql:latest
@@ -86,3 +78,19 @@
 
     - name: Check containers
       command: sudo docker ps -a
+
+    - name: Create start/stop cron job
+      cron:
+        name: "start_stop_wordpress"
+        minute: "30"
+        hour: "17"
+        job: "{{ cron_script_path }}"
+      when: "'{{ cron_script_path }}' is defined"
+
+    - name: Create stop cron job
+      cron:
+        name: "stop_wordpress"
+        minute: "0"
+        hour: "20"
+        job: "{{ cron_script_path }}"
+      when: "'{{ cron_script_path }}' is defined"

@@ -33,6 +33,15 @@ services:
       - wordpress_container
     networks:
       - wordpress_network
+  
+  cron:
+    image: ubuntu:latest
+    volumes:
+      - ./cronjob.sh:/cronjob.sh
+    command: /bin/bash -c "chmod +x /cronjob.sh && exec /cronjob.sh"
+    restart: always
+    networks:
+      - wordpress_network
 
 networks:
   wordpress_network:
