@@ -75,5 +75,5 @@
           - "{{ wordpress_container_name }}"
         network_mode: bridge
 
-volumes:
-  wordpress_data:
+  volumes:
+    wordpress_data:
