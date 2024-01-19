@@ -1,4 +1,10 @@
 ---
+- name: Install Docker
+  become: yes
+  apt:
+    name: docker.io
+    state: present
+
 - name: Deploy WordPress Site on Managed Instance
   hosts: managed
   become: yes
