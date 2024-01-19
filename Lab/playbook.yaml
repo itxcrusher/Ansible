@@ -1,51 +1,13 @@
 ---
-- name: Install Docker on Remote EC2 Instance
-  hosts: remote
+- name: Deploy Apache on Managed Instance
+  hosts: managed
   become: yes
-
   tasks:
-    - name: Update apt package cache (for Ubuntu/Debian)
+    - name: Update apt package cache
       apt:
         update_cache: yes
-      when: ansible_os_family == "Debian"
 
-    - name: Install required packages for Docker
-      package:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - gnupg-agent
-        - software-properties-common
-      when: ansible_os_family == "Debian"
-
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-      when: ansible_os_family == "Debian"
-
-    - name: Add Docker APT repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-      when: ansible_os_family == "Debian"
-
-    - name: Update apt package cache (for Ubuntu/Debian)
+    - name: Install Apache web server
       apt:
-        update_cache: yes
-      when: ansible_os_family == "Debian"
-
-    - name: Install Docker
-      package:
-        name: docker-ce
+        name: apache2
         state: present
-      when: ansible_os_family == "Debian"
-
-    - name: Start Docker service
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
-      when: ansible_os_family == "Debian"
