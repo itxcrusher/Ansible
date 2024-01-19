@@ -80,11 +80,11 @@
           - "443:443"
         network_mode: bridge
 
-      - name: Check if the application is running
-        uri:
-          url: "http://3.80.225.89"
-        register: result
+    - name: Check if the application is running
+      uri:
+        url: "http://3.80.225.89"
+      register: result
 
-      - name: Print the HTTP status code
-        debug:
-          var: result.status
+    - name: Print the HTTP status code
+      debug:
+        var: result.status
