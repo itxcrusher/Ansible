@@ -74,6 +74,3 @@
         depends_on:
           - "{{ wordpress_container_name }}"
         network_mode: bridge
-
-  volumes:
-    wordpress_data:

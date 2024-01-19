@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  wordpress_container:
+    image: wordpress:latest
+    environment:
+      WORDPRESS_DB_HOST: mysql_container
+      WORDPRESS_DB_NAME: "{{ mysql_db }}"
+      WORDPRESS_DB_USER: "{{ mysql_user }}"
+      WORDPRESS_DB_PASSWORD: "{{ mysql_password }}"
+    depends_on:
+      - mysql_container
+    networks:
+      - wordpress_network
+
+  mysql_container:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+      MYSQL_DATABASE: "{{ mysql_db }}"
+      MYSQL_USER: "{{ mysql_user }}"
+      MYSQL_PASSWORD: "{{ mysql_password }}"
+    networks:
+      - wordpress_network
+
+  nginx_container:
+    image: nginx:latest
+    volumes:
+      - ./nginx-config:/etc/nginx/conf.d
+      - wordpress_data:/var/www/html
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - wordpress_container
+    networks:
+      - wordpress_network
+
+networks:
+  wordpress_network:
+
+volumes:
+  wordpress_data:
