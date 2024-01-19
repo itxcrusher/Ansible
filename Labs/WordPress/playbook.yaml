@@ -80,11 +80,8 @@
           - "443:443"
         network_mode: bridge
 
-    - name: Check if the application is running
-      uri:
-        url: "http://3.80.225.89"
-      register: result
+    - name: Check images
+      command: sudo docker images
 
-    - name: Print the HTTP status code
-      debug:
-        var: result.status
+    - name: Check containers
+      command: sudo docker ps -a
