@@ -3,12 +3,12 @@
   hosts: managed
   become: yes
   vars:
-    mysql_root_password: your_mysql_root_password
-    mysql_db: wordpress
-    mysql_user: wordpress_user
-    mysql_password: your_wordpress_db_password
-    wordpress_container_name: wordpress_container
-    nginx_container_name: nginx_container
+    mysql_root_password: "your_mysql_root_password"
+    mysql_db: "wordpress"
+    mysql_user: "wordpress_user"
+    mysql_password: "your_wordpress_db_password"
+    wordpress_container_name: "wordpress_container"
+    nginx_container_name: "nginx_container"
     cron_script_path: "cronjob.sh"
 
   tasks:
