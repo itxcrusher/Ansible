@@ -33,10 +33,25 @@
         dest: "/var/www/html/wordpress.tar.gz"
       notify: Extract WordPress
 
+    - name: Install Python 3 and pip3
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python3
+        - python3-pip
+      when: ansible_distribution == 'Ubuntu'
+
     - name: Install MySQL Python module for Python 3
       ansible.builtin.pip:
         name: mysqlclient
         executable: pip3
+
+    - name: Download and extract WordPress
+      get_url:
+        url: "https://wordpress.org/latest.tar.gz"
+        dest: "/var/www/html/wordpress.tar.gz"
+      notify: Extract WordPress
 
     - name: Create MySQL database for WordPress
       ansible.builtin.mysql_db:
@@ -50,7 +65,7 @@
     - name: Create MySQL user for WordPress
       ansible.builtin.mysql_user:
         name: wordpress
-        password: your_mysql_password
+        password: password
         host: localhost
         priv: "wordpress.*:ALL"
         state: present
