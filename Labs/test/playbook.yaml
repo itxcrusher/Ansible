@@ -20,6 +20,7 @@
         - libapache2-mod-php
         - python3-pip
         - libmysqlclient-dev
+        - pkg-config
       when: ansible_distribution == 'Ubuntu'
 
     - name: Start and enable Apache service
