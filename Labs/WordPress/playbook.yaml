@@ -1,96 +1,82 @@
 ---
-- name: Deploy WordPress Site on Managed Instance
+- name: Deploy WordPress on Managed EC2 Instance
   hosts: managed
-  become: yes
-  vars:
-    mysql_root_password: "your_mysql_root_password"
-    mysql_db: "wordpress"
-    mysql_user: "wordpress_user"
-    mysql_password: "your_wordpress_db_password"
-    wordpress_container_name: "wordpress_container"
-    nginx_container_name: "nginx_container"
-    cron_script_path: "cronjob.sh"
-
+  become: true
   tasks:
-    - name: Update apt package cache
+    - name: Update package cache
       apt:
         update_cache: yes
+      when: ansible_distribution == 'Ubuntu'
 
-    - name: Install Docker
+    - name: Install required packages
       apt:
-        name: docker.io
+        name: "{{ item }}"
         state: present
+      loop:
+        - apache2
+        - mysql-server
+        - php
+        - php-mysql
+        - libapache2-mod-php
+        - python3-pip
+        - libmysqlclient-dev
+        - pkg-config
+      when: ansible_distribution == 'Ubuntu'
 
-    - name: Install Docker Compose
-      apt:
-        name: docker-compose
+    - name: Start and enable Apache service
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install MySQL Python module for Python 3
+      ansible.builtin.pip:
+        name: mysqlclient
+        executable: pip3
+
+    - name: Download and extract WordPress
+      get_url:
+        url: "https://wordpress.org/latest.tar.gz"
+        dest: "/var/www/html/wordpress.tar.gz"
+      notify: Extract WordPress
+
+    - name: Extract Wordpress
+      command: "sudo tar xf /var/www/html/wordpress.tar.gz -C /var/www/html/"
+
+    # - name: Install Python 3 and pip3
+    #   apt:
+    #     name: "{{ item }}"
+    #     state: present
+    #   with_items:
+    #     - python3
+    #     - python3-pip
+    #   when: ansible_distribution == 'Ubuntu'
+
+    - name: Create MySQL database for WordPress
+      ansible.builtin.mysql_db:
+        name: wordpress
         state: present
+      # mysql_db:
+      #   name: wordpress
+      #   state: present
+      # become_user: root
 
-    - name: Create Docker network
-      docker_network:
-        name: wordpress_network
+    - name: Create MySQL user for WordPress
+      ansible.builtin.mysql_user:
+        name: wordpress
+        password: password
+        host: localhost
+        priv: "wordpress.*:ALL"
+        state: present
+      # mysql_user:
+      #   name: wordpress
+      #   password: "123"
+      #   host: localhost
+      #   priv: "wordpress.*:ALL"
+      #   state: present
+      # become_user: root
 
-    - name: Pull MySQL Docker image
-      command: docker pull mysql:latest
-
-    - name: Run MySQL Docker container
-      docker_container:
-        name: mysql_container
-        image: mysql:latest
-        env:
-          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
-          MYSQL_DATABASE: "{{ mysql_db }}"
-          MYSQL_USER: "{{ mysql_user }}"
-          MYSQL_PASSWORD: "{{ mysql_password }}"
-        network_mode: wordpress_network
-
-    - name: Pull WordPress Docker image
-      command: docker pull wordpress:latest
-
-    - name: Run WordPress Docker container
-      docker_container:
-        name: "{{ wordpress_container_name }}"
-        image: wordpress:latest
-        env:
-          WORDPRESS_DB_HOST: mysql_container
-          WORDPRESS_DB_NAME: "{{ mysql_db }}"
-          WORDPRESS_DB_USER: "{{ mysql_user }}"
-          WORDPRESS_DB_PASSWORD: "{{ mysql_password }}"
-        network_mode: wordpress_network
-
-    - name: Pull Nginx Docker image
-      command: docker pull nginx:latest
-
-    - name: Run Nginx Docker container
-      docker_container:
-        name: "{{ nginx_container_name }}"
-        image: nginx:latest
-        volumes:
-          - ./nginx-config:/etc/nginx/conf.d
-          - wordpress_data:/var/www/html
-        ports:
-          - "80:80"
-          - "443:443"
-        network_mode: wordpress_network
-
-    - name: Check images
-      command: sudo docker images
-
-    - name: Check containers
-      command: sudo docker ps -a
-
-    - name: Create start/stop cron job
-      cron:
-        name: "start_stop_wordpress"
-        minute: "30"
-        hour: "17"
-        job: "{{ cron_script_path }}"
-      when: "'{{ cron_script_path }}' is defined"
-
-    - name: Create stop cron job
-      cron:
-        name: "stop_wordpress"
-        minute: "0"
-        hour: "20"
-        job: "{{ cron_script_path }}"
-      when: "'{{ cron_script_path }}' is defined"
+  handlers:
+    - name: Extract WordPress
+      command: "tar xf /var/www/html/wordpress.tar.gz --strip-components=1 -C /var/www/html/"
