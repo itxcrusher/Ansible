@@ -1,0 +1,96 @@
+---
+- name: Deploy WordPress Site on Managed Instance
+  hosts: managed
+  become: yes
+  vars:
+    mysql_root_password: your_mysql_root_password
+    mysql_db: wordpress
+    mysql_user: wordpress_user
+    mysql_password: your_wordpress_db_password
+    wordpress_container_name: wordpress_container
+    nginx_container_name: nginx_container
+    cron_script_path: "cronjob.sh"
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Create Docker network
+      docker_network:
+        name: wordpress_network
+
+    - name: Pull MySQL Docker image
+      command: docker pull mysql:latest
+
+    - name: Run MySQL Docker container
+      docker_container:
+        name: mysql_container
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+          MYSQL_DATABASE: "{{ mysql_db }}"
+          MYSQL_USER: "{{ mysql_user }}"
+          MYSQL_PASSWORD: "{{ mysql_password }}"
+        network_mode: wordpress_network
+
+    - name: Pull WordPress Docker image
+      command: docker pull wordpress:latest
+
+    - name: Run WordPress Docker container
+      docker_container:
+        name: "{{ wordpress_container_name }}"
+        image: wordpress:latest
+        env:
+          WORDPRESS_DB_HOST: mysql_container
+          WORDPRESS_DB_NAME: "{{ mysql_db }}"
+          WORDPRESS_DB_USER: "{{ mysql_user }}"
+          WORDPRESS_DB_PASSWORD: "{{ mysql_password }}"
+        network_mode: wordpress_network
+
+    - name: Pull Nginx Docker image
+      command: docker pull nginx:latest
+
+    - name: Run Nginx Docker container
+      docker_container:
+        name: "{{ nginx_container_name }}"
+        image: nginx:latest
+        volumes:
+          - ./nginx-config:/etc/nginx/conf.d
+          - wordpress_data:/var/www/html
+        ports:
+          - "80:80"
+          - "443:443"
+        network_mode: wordpress_network
+
+    - name: Check images
+      command: sudo docker images
+
+    - name: Check containers
+      command: sudo docker ps -a
+
+    - name: Create start/stop cron job
+      cron:
+        name: "start_stop_wordpress"
+        minute: "30"
+        hour: "17"
+        job: "{{ cron_script_path }}"
+      when: "'{{ cron_script_path }}' is defined"
+
+    - name: Create stop cron job
+      cron:
+        name: "stop_wordpress"
+        minute: "0"
+        hour: "20"
+        job: "{{ cron_script_path }}"
+      when: "'{{ cron_script_path }}' is defined"
